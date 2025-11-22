@@ -3,3 +3,6 @@ site_url: https://paolino.github.io/cardano-n2n-client/
 
 theme:
   name: readthedocs
+
+plugins:
+  - asciinema-player:

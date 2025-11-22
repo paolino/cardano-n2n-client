@@ -29,17 +29,19 @@ let
       hlint = indexTool;
     };
     withHoogle = true;
-    buildInputs = [
-      pkgs.gitAndTools.git
-      pkgs.just
-      pkgs.nixfmt-classic
-      pkgs.mkdocs
+    buildInputs = with pkgs; [
+      gitAndTools.git
+      just
+      nixfmt-classic
 
     ];
     shellHook = ''
       echo "Entering shell for cardano-n2n-client development"
     '';
   };
+  mkdocs-shell = import ./mkdocs-asciinema-player/shell.nix
+    { inherit pkgs;
+    };
   quality-shell = { pkgs, ... }: {
     tools = {
       cabal-fmt = indexTool;
@@ -53,6 +55,7 @@ let
 in {
   devShells = {
     default = project.shellFor shell;
+    mkdocs = mkdocs-shell;
     quality = project.shellFor quality-shell;
   };
   packages.cardano-n2n-client =
