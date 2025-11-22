@@ -12,7 +12,4 @@ This library allows you to connect to a Cardano node using the node-to-node prot
 }
 ```
 
-## Features
-
-
 [source](https://github.com/paolino/cardano-n2n-client)
