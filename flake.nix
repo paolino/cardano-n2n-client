@@ -1,0 +1,75 @@
+{
+  description = "cardano-n2n-client";
+  nixConfig = {
+    extra-substituters = [ "https://cache.iog.io" ];
+    extra-trusted-public-keys =
+      [ "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" ];
+  };
+  inputs = {
+    haskellNix.url = "github:input-output-hk/haskell.nix";
+    nixpkgs.follows = "haskellNix/nixpkgs-unstable";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-utils.url = "github:hamishmack/flake-utils/hkm/nested-hydraJobs";
+    iohkNix = {
+      url = "github:input-output-hk/iohk-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    CHaP = {
+      url = "github:intersectmbo/cardano-haskell-packages?ref=repo";
+      flake = false;
+    };
+    cardano-node-runtime = {
+      url = "github:IntersectMBO/cardano-node?ref=10.1.4";
+    };
+  };
+
+  outputs = inputs@{ self, nixpkgs, flake-utils, haskellNix, CHaP, iohkNix
+    , cardano-node-runtime, ... }:
+    let
+      lib = nixpkgs.lib;
+      version = self.dirtyShortRev or self.shortRev;
+
+      perSystem = system:
+        let
+          node-project = cardano-node-runtime.project.${system};
+          cardano-node = node-project.pkgs.cardano-node;
+          cardano-cli = node-project.pkgs.cardano-cli;
+          pkgs = import nixpkgs {
+            overlays = [
+              iohkNix.overlays.crypto # modified crypto libs
+              haskellNix.overlay # some functions
+              iohkNix.overlays.haskell-nix-crypto
+              iohkNix.overlays.cardano-lib
+            ];
+            inherit system;
+          };
+          project = import ./nix/project.nix {
+            indexState = "2025-08-07T00:00:00Z";
+            inherit CHaP;
+            inherit pkgs;
+          };
+          docker-cardano-n2n-client-image =
+            import ./nix/docker-image.nix { inherit pkgs project version; };
+          docker-packages = {
+            packages.docker-image = docker-cardano-n2n-client-image;
+          };
+          other-tools = {
+            packages.cardano-node = cardano-node;
+            packages.cardano-cli = cardano-cli;
+          };
+
+          fullPackages = lib.mergeAttrsList [
+            project.packages
+            other-tools.packages
+            docker-packages.packages
+          ];
+
+        in {
+          packages = fullPackages // {
+            default = project.packages.cardano-n2n-client;
+          };
+          inherit (project) devShells;
+        };
+
+    in flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-darwin" ] perSystem;
+}

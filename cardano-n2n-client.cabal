@@ -1,0 +1,90 @@
+cabal-version:   3.0
+name:            cardano-n2n-client
+version:         0.1.0.0
+license:         Apache-2.0
+license-file:    LICENSE
+author:          Paolo Veronelli
+maintainer:      paolo.veronelli@gmail.com
+category:        Crypto
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common settings
+  ghc-options:
+    -Wall -Wunused-imports -Wunused-packages -Wname-shadowing
+    -Wdeferred-out-of-scope-variables -Wpartial-type-signatures
+    -Wredundant-constraints
+
+  default-extensions:
+    BangPatterns
+    DataKinds
+    DeriveAnyClass
+    DeriveGeneric
+    DerivingStrategies
+    DerivingVia
+    DuplicateRecordFields
+    FlexibleContexts
+    FlexibleInstances
+    GADTs
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    LambdaCase
+    MultiParamTypeClasses
+    NamedFieldPuns
+    OverloadedStrings
+    PatternSynonyms
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    StrictData
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+
+library
+  import:          settings
+  hs-source-dirs:  src
+  build-depends:
+    , base
+    , bytestring
+    , cardano-ledger-byron
+    , contra-tracer
+    , network
+    , network-mux
+    , ouroboros-consensus
+    , ouroboros-consensus-cardano   ^>=0.25
+    , ouroboros-consensus-protocol
+    , ouroboros-network
+    , ouroboros-network-api
+    , ouroboros-network-framework
+    , ouroboros-network-mock
+    , ouroboros-network-protocols
+    , serialise
+    , strict-stm
+    , typed-protocols
+
+  exposed-modules:
+    Cardano.N2N.Client
+    Cardano.N2N.Client.ChainSync.Codec
+    Cardano.N2N.Client.ChainSync.Connection
+
+  other-modules:
+
+executable cardano-n2n-client
+  import:         settings
+  main-is:        main.hs
+  build-depends:
+    , base
+    , cardano-n2n-client
+
+  hs-source-dirs: app
+
+test-suite cardano-n2n-client-test
+  import:             settings
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     test
+  main-is:            Main.hs
+  build-depends:      hspec
+  build-tool-depends: hspec-discover:hspec-discover
