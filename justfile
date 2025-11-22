@@ -28,3 +28,11 @@ CI:
   just hlint
   just build
   just test
+
+watch-docs:
+  #!/usr/bin/env bash
+  nix develop .#mkdocs -c mkdocs serve
+
+deploy-docs:
+  #!/usr/bin/env bash
+  nix develop .#mkdocs -c mkdocs gh-deploy --clean
