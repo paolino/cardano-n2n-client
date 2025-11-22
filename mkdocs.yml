@@ -1,0 +1,5 @@
+site_name: Cardano N2N Client
+site_url: https://paolino.github.io/cardano-n2n-client/
+
+theme:
+  name: readthedocs

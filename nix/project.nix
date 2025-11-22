@@ -33,6 +33,7 @@ let
       pkgs.gitAndTools.git
       pkgs.just
       pkgs.nixfmt-classic
+      pkgs.mkdocs
 
     ];
     shellHook = ''
