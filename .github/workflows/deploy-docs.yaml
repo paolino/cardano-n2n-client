@@ -1,7 +1,10 @@
-name: Deploy MkDocs
+name: Build and deploy documentation
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
 permissions:
   contents: write
 
@@ -10,10 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: paolino/gh-actions/setup-nix@v0.0.1
         with:
-          python-version: '3.x'
-      - run: |
-          pip install mkdocs
-          pip install mkdocs-asciinema-player
-      - run: mkdocs gh-deploy --force  # --force overwrites gh-pages without prompting
+          cachix-auth-token: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+      - run: nix develop .#mkdocs -c mkdocs gh-deploy --force

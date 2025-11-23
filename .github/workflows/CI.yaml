@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+defaults:
+  run:
+    shell: bash
 jobs:
   build:
     name: Build
@@ -15,22 +18,13 @@ jobs:
     steps:
       - run: sudo rm -rf /opt&
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: paolino/gh-actions/setup-nix@v0.0.1
         with:
-          extra_nix_config: |
-            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-            substituters = https://cache.iog.io https://cache.nixos.org/
-            accept-flake-config = true
-      - uses: cachix/cachix-action@v15
-        with:
-          name: paolino
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          cachix-auth-token: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Build executable
-        working-directory: .
         run: nix build .#cardano-n2n-client
       - name: Build docker image
         run: nix build .#docker-image -o output-docker-image
-        working-directory: .
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -38,7 +32,6 @@ jobs:
           path: ./output-docker-image
       - name: Build arx
         run: nix bundle -o output-linux-tarball
-        working-directory: .
       - name: Upload tarball Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -49,18 +42,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: paolino/gh-actions/setup-nix@v0.0.1
         with:
-          extra_nix_config: |
-            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-            substituters = https://cache.iog.io https://cache.nixos.org/
-            accept-flake-config = true
-      - uses: cachix/cachix-action@v15
-        with:
-          name: paolino
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          cachix-auth-token: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Run Tests
-        working-directory: .
         run: nix run .#cardano-n2n-client-tests
   # bench:
   #   name: Run Benchmarks
@@ -84,19 +69,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
+      - uses: paolino/gh-actions/setup-nix@v0.0.1
         with:
-          extra_nix_config: |
-            trusted-public-keys = hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-            substituters = https://cache.iog.io https://cache.nixos.org/
-            accept-flake-config = true
-      - uses: cachix/cachix-action@v15
-        with:
-          name: paolino
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          cachix-auth-token: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Check Formatting
-        working-directory: .
         run: nix develop .#quality -c just format
       - name: Check linting
-        working-directory: .
         run: nix develop .#quality -c just hlint
