@@ -1,4 +1,4 @@
-{ CHaP, indexState, pkgs, ... }:
+{ CHaP, indexState, pkgs, mkdocs, ... }:
 
 let
   indexTool = { index-state = indexState; };
@@ -33,15 +33,16 @@ let
       gitAndTools.git
       just
       nixfmt-classic
+      pkgs.mkdocs
+      mkdocs.mkdocs-asciinema-player
+      mkdocs.mkdocs-markdown-callouts
 
     ];
     shellHook = ''
       echo "Entering shell for cardano-n2n-client development"
     '';
   };
-  mkdocs-shell = import ./mkdocs-asciinema-player/shell.nix
-    { inherit pkgs;
-    };
+
   quality-shell = { pkgs, ... }: {
     tools = {
       cabal-fmt = indexTool;
@@ -55,7 +56,6 @@ let
 in {
   devShells = {
     default = project.shellFor shell;
-    mkdocs = mkdocs-shell;
     quality = project.shellFor quality-shell;
   };
   packages.cardano-n2n-client =

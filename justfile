@@ -31,8 +31,8 @@ CI:
 
 watch-docs:
   #!/usr/bin/env bash
-  nix develop .#mkdocs -c mkdocs serve
+  mkdocs serve
 
 deploy-docs:
   #!/usr/bin/env bash
-  nix develop .#mkdocs -c mkdocs gh-deploy --clean
+  mkdocs gh-deploy --clean

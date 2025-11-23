@@ -5,4 +5,8 @@ theme:
   name: readthedocs
 
 plugins:
-  - asciinema-player:
+  - asciinema-player
+  - search
+
+markdown_extensions:
+  - callouts

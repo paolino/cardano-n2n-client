@@ -21,10 +21,11 @@
     cardano-node-runtime = {
       url = "github:IntersectMBO/cardano-node?ref=10.1.4";
     };
+    mkdocs.url = "github:paolino/dev-assets?dir=mkdocs";
   };
 
   outputs = inputs@{ self, nixpkgs, flake-utils, haskellNix, CHaP, iohkNix
-    , cardano-node-runtime, ... }:
+    , mkdocs, cardano-node-runtime, ... }:
     let
       lib = nixpkgs.lib;
       version = self.dirtyShortRev or self.shortRev;
@@ -47,6 +48,7 @@
             indexState = "2025-08-07T00:00:00Z";
             inherit CHaP;
             inherit pkgs;
+            mkdocs = mkdocs.packages.${system};
           };
           docker-cardano-n2n-client-image =
             import ./nix/docker-image.nix { inherit pkgs project version; };

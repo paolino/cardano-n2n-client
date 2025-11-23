@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: paolino/gh-actions/setup-nix@v0.0.1
+      - uses: paolino/dev-assets/setup-nix@v0.0.1
         with:
           cachix-auth-token: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-      - run: nix develop .#mkdocs -c mkdocs gh-deploy --force
+      - run: nix develop github:paolino/dev-assets?dir=mkdocs -c mkdocs gh-deploy --force
