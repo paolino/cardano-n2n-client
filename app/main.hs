@@ -1,4 +1,4 @@
-import Cardano.N2N.Client qualified
+import Cardano.N2N.Client.Application.Run qualified
 
 main :: IO ()
-main = Cardano.N2N.Client.main
+main = Cardano.N2N.Client.Application.Run.main

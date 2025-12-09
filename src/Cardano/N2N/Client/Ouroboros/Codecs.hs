@@ -1,12 +1,14 @@
-module Cardano.N2N.Client.ChainSync.Codec
+module Cardano.N2N.Client.Ouroboros.Codecs
     ( codecChainSync
-    , Block
-    , Header
-    , Tip
-    , Point
     ) where
 
 import Cardano.Chain.Slotting (EpochSlots (EpochSlots))
+import Cardano.N2N.Client.Ouroboros.Types
+    ( Block
+    , ChainSync
+    , Header
+    , Point
+    )
 import Codec.Serialise (DeserialiseFailure, Serialise (..))
 import Codec.Serialise.Decoding (Decoder)
 import Codec.Serialise.Encoding (Encoding)
@@ -44,24 +46,11 @@ import Ouroboros.Network.Block
     )
 import Ouroboros.Network.Block qualified as Network
 import Ouroboros.Network.Protocol.ChainSync.Codec qualified as ChainSync
-import Ouroboros.Network.Protocol.ChainSync.Type (ChainSync)
-
--- | Real Cardano Block type
-type Block = Consensus.CardanoBlock Consensus.StandardCrypto
-
--- | Real Cardano Header type
-type Header = Consensus.Header Block
-
--- | Real Cardano Tip type
-type Tip = Network.Tip Block
-
--- | Real Cardano Point type
-type Point = Network.Point Header
 
 -- The ChainSync codec for our Block, Point, and Tip types
 codecChainSync
     :: Codec
-        (ChainSync Header Point Tip)
+        ChainSync
         DeserialiseFailure
         IO
         LBS.ByteString
