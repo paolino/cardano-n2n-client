@@ -2,23 +2,13 @@
 
 let
   indexTool = { index-state = indexState; };
-  fix-libs = ({ lib, pkgs, ... }: {
+  fix-libs = { lib, pkgs, ... }: {
     # Use the VRF fork of libsodium
     packages.cardano-crypto-praos.components.library.pkgconfig =
       lib.mkForce [ [ pkgs.libsodium-vrf ] ];
     packages.cardano-crypto-class.components.library.pkgconfig =
       lib.mkForce [[ pkgs.libsodium-vrf pkgs.secp256k1 pkgs.libblst ]];
-  });
-  mkProject = ctx@{ lib, pkgs, ... }: {
-    name = "cardano-n2n-client";
-    src = ./..;
-    compiler-nix-name = "ghc984";
-
-    modules = [ fix-libs ];
-    inputMap = { "https://chap.intersectmbo.org/" = CHaP; };
   };
-  project = pkgs.haskell-nix.cabalProject' mkProject;
-
   shell = { pkgs, ... }: {
     tools = {
       cabal = indexTool;
@@ -42,6 +32,16 @@ let
       echo "Entering shell for cardano-n2n-client development"
     '';
   };
+  mkProject = ctx@{ lib, pkgs, ... }: {
+    name = "cardano-n2n-client";
+    src = ./..;
+    compiler-nix-name = "ghc984";
+
+    modules = [ fix-libs ];
+    inputMap = { "https://chap.intersectmbo.org/" = CHaP; };
+  };
+
+  project = pkgs.haskell-nix.cabalProject' mkProject;
 
   quality-shell = { pkgs, ... }: {
     tools = {
