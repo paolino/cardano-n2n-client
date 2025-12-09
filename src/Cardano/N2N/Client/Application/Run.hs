@@ -3,74 +3,57 @@ module Cardano.N2N.Client.Application.Run
     )
 where
 
+import Cardano.N2N.Client.Application.BlockFetch
+    ( mkBlockFetchApplication
+    )
 import Cardano.N2N.Client.Application.ChainSync
-    ( Limit (..)
-    , mkChainSyncApplication
+    ( mkChainSyncApplication
     )
-import Cardano.N2N.Client.Ouroboros.Connection
-    ( runNodeApplication
+import Cardano.N2N.Client.Application.Options
+    ( Options (..)
+    , optionsParser
     )
-import Cardano.N2N.Client.Ouroboros.Types (Header, Point)
+import Cardano.N2N.Client.Ouroboros.Connection (runNodeApplication)
 import Control.Concurrent.Class.MonadSTM.Strict
-    ( newTVarIO
+    ( newTQueueIO
+    , newTVarIO
     , readTVarIO
     )
-import Control.Exception (SomeException, try)
-import Network.Socket (PortNumber)
-import Ouroboros.Consensus.Protocol.Praos.Header ()
-import Ouroboros.Consensus.Shelley.Ledger.NetworkProtocolVersion ()
-import Ouroboros.Consensus.Shelley.Ledger.SupportsProtocol ()
-import Ouroboros.Network.Block qualified as Network
-import Ouroboros.Network.Magic (NetworkMagic (..))
-import Ouroboros.Network.Mock.Chain (Chain)
+import Control.Exception (throwIO)
+import OptEnvConf (runParser)
 import Ouroboros.Network.Mock.Chain qualified as Chain
-import Ouroboros.Network.Point (WithOrigin (..))
+import Paths_cardano_n2n_client (version)
+
+main :: IO ()
+main = do
+    options <- runParser version "N2N app example" optionsParser
+    e <- application options
+    putStrLn $ "Synced " ++ show e ++ " blocks."
 
 -- | Run an cardano-n2n-client application that connects to a node and syncs
 -- blocks starting from the given point, up to the given limit.
 application
-    :: NetworkMagic
-    -- ^ network magic
-    -> String
-    -- ^ peer host
-    -> PortNumber
-    -- ^ peer port
-    -> Point
-    -- ^ starting point
-    -> Limit
+    :: Options
     -- ^ limit of blocks to sync
-    -> IO (Either SomeException (Chain.Point Header))
-application magic peerName peerPort startingPoint limit = do
-    chainvar <- newTVarIO (Chain.Genesis :: Chain Header)
-    res <-
-        -- To gracefully handle the node getting killed it seems we need
-        -- the outer 'try', even if connectToNode already returns 'Either
-        -- SomeException'.
-        try
-            $ runNodeApplication
-                magic
-                peerName
-                peerPort
-                (mkChainSyncApplication chainvar startingPoint limit)
-    case res of
-        Left e -> return $ Left e
-        Right _ -> pure . Chain.headPoint <$> readTVarIO chainvar
-
-originPoint :: Point
-originPoint = Network.Point Origin
-
-preprod :: NetworkMagic
-preprod = NetworkMagic 1
-
-main :: IO ()
-main = do
-    e <-
-        application
-            preprod
-            "cardano-node-preprod"
-            3000
-            originPoint
-            (Limit 100)
-    case e of
-        Left err -> putStrLn $ "Error: " ++ show err
-        Right point -> putStrLn $ "Synced up to point: " ++ show point
+    -> IO Int
+application
+    Options
+        { networkMagic
+        , nodeName
+        , portNumber
+        , startingPoint
+        , limit
+        } = do
+        chainvar <- newTVarIO Chain.Genesis
+        blockReq <- newTQueueIO
+        count <- newTVarIO (0 :: Int)
+        r <-
+            runNodeApplication
+                networkMagic
+                nodeName
+                portNumber
+                (mkChainSyncApplication blockReq chainvar startingPoint limit)
+                (mkBlockFetchApplication blockReq count)
+        case r of
+            Left err -> throwIO err
+            Right _ -> readTVarIO count

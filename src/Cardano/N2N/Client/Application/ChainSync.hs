@@ -12,17 +12,16 @@ import Cardano.N2N.Client.Ouroboros.Types
     )
 import Control.Concurrent.Class.MonadSTM.Strict
     ( MonadSTM (..)
+    , StrictTQueue
     , StrictTVar
     , modifyTVar
     , readTVar
+    , writeTQueue
     )
 import Data.Function (fix)
 import Data.Maybe (fromMaybe)
 import Data.Word (Word32)
 import Ouroboros.Consensus.Cardano.Node ()
-import Ouroboros.Consensus.Protocol.Praos.Header ()
-import Ouroboros.Consensus.Shelley.Ledger.NetworkProtocolVersion ()
-import Ouroboros.Consensus.Shelley.Ledger.SupportsProtocol ()
 import Ouroboros.Network.Mock.Chain (Chain)
 import Ouroboros.Network.Mock.Chain qualified as Chain
 import Ouroboros.Network.NodeToNode
@@ -38,9 +37,10 @@ import Ouroboros.Network.Protocol.ChainSync.Client
 
 type State = StrictTVar IO (Chain Header)
 
-rollForward :: State -> Header -> IO ()
-rollForward chainvar b = atomically $ modifyTVar chainvar $ \(!chain) ->
-    Chain.addBlock b chain
+rollForward :: StrictTQueue IO Header -> State -> Header -> IO ()
+rollForward blockReq chainvar b = atomically $ do
+    modifyTVar chainvar $ \(!chain) -> Chain.addBlock b chain
+    writeTQueue blockReq b
 
 -- We will fail to roll back iff `p` doesn't exist in `chain`
 -- This will happen when we're asked to roll back to `startingPoint`,
@@ -116,7 +116,8 @@ nothingToDone (Just next) cont = cont next
 
 -- boots the protocol and step into initialise
 mkChainSyncApplication
-    :: State
+    :: StrictTQueue IO Header
+    -> State
     -- ^ the mock chain
     -> Point
     -- ^ starting point
@@ -124,9 +125,9 @@ mkChainSyncApplication
     -- ^ limit of blocks to sync
     -> ChainSyncApplication
     -- ^ the chain sync client application
-mkChainSyncApplication stateVar startingPoint limit = ChainSyncClient $ do
+mkChainSyncApplication blockReq stateVar startingPoint limit = ChainSyncClient $ do
     ps <- points (mkProtocol stateVar limit) [startingPoint]
-    pure $ nothingToDone ps $ initialise stateVar startingPoint
+    pure $ nothingToDone ps $ initialise blockReq stateVar startingPoint
 
 -- In this consumer example, we do not care about whether the server
 -- found an intersection or not. If not, we'll just sync from genesis.
@@ -136,14 +137,15 @@ mkChainSyncApplication stateVar startingPoint limit = ChainSyncClient $ do
 --  rejecting the server if there is no intersection in the last K blocks
 --
 initialise
-    :: State -- the mock chain
+    :: StrictTQueue IO Header
+    -> State -- the mock chain
     -> Point -- starting point
     -> Protocol -- previous client state machine
     -> ChainSyncIdle
-initialise stateVar startingPoint prev =
+initialise blockReq stateVar startingPoint prev =
     let next =
             ChainSyncClient
-                { runChainSyncClient = pure $ requestNext stateVar prev
+                { runChainSyncClient = pure $ requestNext blockReq stateVar prev
                 }
     in  SendMsgFindIntersect [startingPoint]
             $ ClientStIntersect
@@ -152,21 +154,22 @@ initialise stateVar startingPoint prev =
                 }
 
 requestNext
-    :: State -- the mock chain
+    :: StrictTQueue IO Header
+    -> State -- the mock chain
     -> Protocol -- this client state machine
     -> ChainSyncIdle
-requestNext stateVar prev =
+requestNext blockReq stateVar prev =
     SendMsgRequestNext
         -- We have the opportunity to do something when receiving
         -- MsgAwaitReply. In this example we don't take up that opportunity.
         (pure ())
         ClientStNext
             { recvMsgRollForward = \header _tip -> ChainSyncClient $ do
-                rollForward stateVar header
+                rollForward blockReq stateVar header
                 choice <- onRollForward prev header
-                pure $ nothingToDone choice $ requestNext stateVar
+                pure $ nothingToDone choice $ requestNext blockReq stateVar
             , recvMsgRollBackward = \pIntersect tip -> ChainSyncClient $ do
                 rollBackward stateVar pIntersect
                 choice <- onRollBackward prev pIntersect tip
-                pure $ nothingToDone choice $ requestNext stateVar
+                pure $ nothingToDone choice $ requestNext blockReq stateVar
             }

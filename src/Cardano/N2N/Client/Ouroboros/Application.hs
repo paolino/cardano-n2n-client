@@ -3,9 +3,15 @@ module Cardano.N2N.Client.Ouroboros.Application
     )
 where
 
-import Cardano.N2N.Client.Ouroboros.Codecs (codecChainSync)
+import Cardano.N2N.Client.Application.BlockFetch
+    ( BlockFetchApplication
+    )
+import Cardano.N2N.Client.Ouroboros.Codecs
+    ( codecBlockFetch
+    , codecChainSync
+    )
 import Cardano.N2N.Client.Ouroboros.Types (ChainSyncApplication)
-import Control.Tracer (Contravariant (contramap), stdoutTracer)
+import Control.Tracer (nullTracer)
 import Data.ByteString.Lazy (LazyByteString)
 import Data.Void (Void)
 import Network.Mux qualified as Mx
@@ -22,6 +28,7 @@ import Ouroboros.Network.Mux
     , StartOnDemandOrEagerly (StartOnDemand)
     , mkMiniProtocolCbFromPeer
     )
+import Ouroboros.Network.Protocol.BlockFetch.Client qualified as BlockFetch
 import Ouroboros.Network.Protocol.ChainSync.Client qualified as ChainSync
 
 -- TODO: provide sensible limits
@@ -35,6 +42,8 @@ maximumMiniProtocolLimits =
 mkOuroborosApplication
     :: ChainSyncApplication
     -- ^ chainSync
+    -> BlockFetchApplication
+    -- ^ blockFetch
     -> OuroborosApplicationWithMinimalCtx
         Mx.InitiatorMode
         addr
@@ -42,22 +51,35 @@ mkOuroborosApplication
         IO
         ()
         Void
-mkOuroborosApplication chainSyncApp =
+mkOuroborosApplication chainSyncApp blockFetchApp =
     OuroborosApplication
         { getOuroborosApplication =
             [ MiniProtocol
                 { miniProtocolNum = MiniProtocolNum 2
                 , miniProtocolStart = StartOnDemand
                 , miniProtocolLimits = maximumMiniProtocolLimits
-                , miniProtocolRun = run
+                , miniProtocolRun = runChainSync
+                }
+            , MiniProtocol
+                { miniProtocolNum = MiniProtocolNum 3
+                , miniProtocolStart = StartOnDemand
+                , miniProtocolLimits = maximumMiniProtocolLimits
+                , miniProtocolRun = runFetchBlocks
                 }
             ]
         }
   where
-    run = InitiatorProtocolOnly
+    runChainSync = InitiatorProtocolOnly
         $ mkMiniProtocolCbFromPeer
         $ \_ctx ->
-            ( contramap show stdoutTracer -- tracer
+            ( nullTracer
             , codecChainSync
             , ChainSync.chainSyncClientPeer chainSyncApp
+            )
+    runFetchBlocks = InitiatorProtocolOnly
+        $ mkMiniProtocolCbFromPeer
+        $ \_ctx ->
+            ( nullTracer
+            , codecBlockFetch
+            , BlockFetch.blockFetchClientPeer blockFetchApp
             )

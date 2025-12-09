@@ -1,8 +1,13 @@
 module Cardano.N2N.Client.Ouroboros.Connection
     ( runNodeApplication
+    , ChainSyncApplication
+    , BlockFetchApplication
     )
 where
 
+import Cardano.N2N.Client.Application.BlockFetch
+    ( BlockFetchApplication
+    )
 import Cardano.N2N.Client.Ouroboros.Application
     ( mkOuroborosApplication
     )
@@ -63,12 +68,15 @@ runNodeApplication
     -- ^ port
     -> ChainSyncApplication
     -- ^ application
+    -> BlockFetchApplication
+    -- ^ application
     -> IO (Either SomeException (Either () Void))
 runNodeApplication
     magic
     peerName
     peerPort
-    application = withIOManager $ \iocp -> do
+    chainSyncApplication
+    blockFetchApplication = withIOManager $ \iocp -> do
         AddrInfo{addrAddress} <- resolve peerName peerPort
         connectToNode -- withNode
             (socketSnocket iocp) -- TCP
@@ -96,7 +104,11 @@ runNodeApplication
                     , query = False
                     }
                 )
-                (const $ mkOuroborosApplication application)
+                ( const
+                    $ mkOuroborosApplication
+                        chainSyncApplication
+                        blockFetchApplication
+                )
             )
             Nothing
             addrAddress

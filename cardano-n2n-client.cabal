@@ -53,6 +53,7 @@ library
     , contra-tracer
     , network
     , network-mux
+    , opt-env-conf
     , ouroboros-consensus
     , ouroboros-consensus-cardano   ^>=0.25
     , ouroboros-consensus-protocol
@@ -66,14 +67,16 @@ library
     , typed-protocols
 
   exposed-modules:
+    Cardano.N2N.Client.Application.BlockFetch
     Cardano.N2N.Client.Application.ChainSync
+    Cardano.N2N.Client.Application.Options
     Cardano.N2N.Client.Application.Run
     Cardano.N2N.Client.Ouroboros.Application
     Cardano.N2N.Client.Ouroboros.Codecs
     Cardano.N2N.Client.Ouroboros.Connection
     Cardano.N2N.Client.Ouroboros.Types
 
-  other-modules:
+  other-modules:   Paths_cardano_n2n_client
 
 executable cardano-n2n-client
   import:         settings

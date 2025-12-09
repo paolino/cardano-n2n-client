@@ -7,6 +7,7 @@ module Cardano.N2N.Client.Ouroboros.Types
     , BlockFetchApplication
     , ChainSyncApplication
     , ChainSync
+    , BlockFetch
     ) where
 
 import Ouroboros.Consensus.Cardano.Block qualified as Consensus
@@ -15,6 +16,7 @@ import Ouroboros.Consensus.Shelley.Ledger.NetworkProtocolVersion ()
 import Ouroboros.Consensus.Shelley.Ledger.SupportsProtocol ()
 import Ouroboros.Network.Block qualified as Network
 import Ouroboros.Network.Protocol.BlockFetch.Client (BlockFetchClient)
+import Ouroboros.Network.Protocol.BlockFetch.Type qualified as BlockFetch
 import Ouroboros.Network.Protocol.ChainSync.Client (ChainSyncClient)
 import Ouroboros.Network.Protocol.ChainSync.Type qualified as ChainSync
 
@@ -41,3 +43,6 @@ type ChainSyncApplication = ChainSyncClient Header Point Tip IO ()
 
 -- | Type alias for ChainSync protocol
 type ChainSync = ChainSync.ChainSync Header Point Tip
+
+-- | Type alias for BlockFetch protocol
+type BlockFetch = BlockFetch.BlockFetch Block Point

@@ -1,10 +1,12 @@
 module Cardano.N2N.Client.Ouroboros.Codecs
     ( codecChainSync
+    , codecBlockFetch
     ) where
 
 import Cardano.Chain.Slotting (EpochSlots (EpochSlots))
 import Cardano.N2N.Client.Ouroboros.Types
     ( Block
+    , BlockFetch
     , ChainSync
     , Header
     , Point
@@ -45,6 +47,7 @@ import Ouroboros.Network.Block
     , encodeTip
     )
 import Ouroboros.Network.Block qualified as Network
+import Ouroboros.Network.Protocol.BlockFetch.Codec qualified as BlockFetch
 import Ouroboros.Network.Protocol.ChainSync.Codec qualified as ChainSync
 
 -- The ChainSync codec for our Block, Point, and Tip types
@@ -97,3 +100,20 @@ encTip :: Network.Tip Block -> Encoding
 encTip = encodeTip (encodeRawHash (Proxy @Block))
 decTip :: Decoder s (Network.Tip Block)
 decTip = decodeTip (decodeRawHash (Proxy @Block))
+
+-- | Real Cardano BlockFetch codec
+codecBlockFetch
+    :: Codec BlockFetch DeserialiseFailure IO LBS.ByteString
+codecBlockFetch =
+    BlockFetch.codecBlockFetch
+        encBlock
+        decBlock
+        encPoint
+        decPoint
+
+-- ----- Encoding and Decoding Blocks -----
+encBlock :: Block -> Encoding
+encBlock = encodeNodeToNode @Block ccfg version
+
+decBlock :: Decoder s Block
+decBlock = decodeNodeToNode @Block ccfg version
