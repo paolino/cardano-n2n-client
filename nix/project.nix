@@ -1,4 +1,4 @@
-{ CHaP, indexState, pkgs, mkdocs, ... }:
+{ CHaP, indexState, pkgs, mkdocs, asciinema, ... }:
 
 let
   indexTool = { index-state = indexState; };
@@ -20,12 +20,14 @@ let
     };
     withHoogle = true;
     buildInputs = with pkgs; [
-      gitAndTools.git
       just
       nixfmt-classic
       pkgs.mkdocs
-      mkdocs.mkdocs-asciinema-player
-      mkdocs.mkdocs-markdown-callouts
+      mkdocs.asciinema-plugin
+      mkdocs.markdown-callouts
+      asciinema.compress
+      asciinema.resize
+      pkgs.asciinema
 
     ];
     shellHook = ''

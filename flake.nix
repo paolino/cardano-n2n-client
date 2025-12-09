@@ -22,10 +22,11 @@
       url = "github:IntersectMBO/cardano-node?ref=10.1.4";
     };
     mkdocs.url = "github:paolino/dev-assets?dir=mkdocs";
+    asciinema.url = "github:paolino/dev-assets?dir=asciinema";
   };
 
   outputs = inputs@{ self, nixpkgs, flake-parts, haskellNix, CHaP, iohkNix
-    , mkdocs, cardano-node-runtime, ... }:
+    , mkdocs, asciinema, cardano-node-runtime, ... }:
     let
       version = self.dirtyShortRev or self.shortRev;
       parts = flake-parts.lib.mkFlake { inherit inputs; } {
@@ -42,14 +43,15 @@
               ];
               inherit system;
             };
-            project = import ./nix/project.nix {
-              indexState = "2025-08-07T00:00:00Z";
+            project = pkgs.callPackage ./nix/project.nix {
               inherit CHaP;
-              inherit pkgs;
+              indexState = "2025-08-07T00:00:00Z";
               mkdocs = mkdocs.packages.${system};
+              asciinema = asciinema.packages.${system};
             };
-            docker-image =
-              import ./nix/docker-image.nix { inherit pkgs project version; };
+            docker-image = pkgs.callPackage ./nix/docker-image.nix {
+              inherit project version;
+            };
 
           in rec {
             packages = {
