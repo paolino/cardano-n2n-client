@@ -14,7 +14,11 @@ import Cardano.N2N.Client.Application.Options
     , Options (..)
     , optionsParser
     )
+import Cardano.N2N.Client.Application.TxIns (txIns)
 import Cardano.N2N.Client.Ouroboros.Connection (runNodeApplication)
+import Cardano.N2N.Client.Ouroboros.Types
+    ( Block
+    )
 import Control.Concurrent.Class.MonadSTM.Strict
     ( MonadSTM (..)
     , modifyTVar
@@ -26,8 +30,12 @@ import Control.Concurrent.Class.MonadSTM.Strict
     )
 import Control.Exception (throwIO)
 import Control.Monad (when)
+import Data.ByteArray.Encoding (Base (..), convertToBase)
+import Data.ByteString.Char8 qualified as B
+import Data.ByteString.Lazy.Char8 qualified as BL
 import OptEnvConf (runParser)
 import Paths_cardano_n2n_client (version)
+import System.IO (BufferMode (..), hSetBuffering, stdout)
 
 main :: IO ()
 main = do
@@ -49,17 +57,21 @@ application
         , startingPoint
         , limit
         } = do
+        hSetBuffering stdout NoBuffering
         events <- newTBQueueIO 100
         doneVar <- newTVarIO False
 
         -- A TVar to count the number of synced blocks
         countVar <- newTVarIO $ Limit 0
-        let useBlock _ = atomically $ do
-                modifyTVar countVar succ
-                count <- readTVar countVar
-                when (count >= limit)
-                    $ writeTVar doneVar True
-
+        let useBlock block = do
+                count <- atomically $ do
+                    modifyTVar countVar succ
+                    count <- readTVar countVar
+                    when (count >= limit)
+                        $ writeTVar doneVar True
+                    pure count
+                putStr $ "block height: " <> show count <> "\r"
+                printTxIns block
         r <-
             runNodeApplication
                 networkMagic
@@ -70,3 +82,8 @@ application
         case r of
             Left err -> throwIO err
             Right _ -> readTVarIO countVar
+
+printTxIns :: Block -> IO ()
+printTxIns blk = do
+    let ins = txIns blk
+    mapM_ (B.putStrLn . convertToBase Base64 . BL.toStrict) ins

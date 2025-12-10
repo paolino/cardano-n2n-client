@@ -49,10 +49,13 @@ library
   build-depends:
     , base
     , bytestring
+    , cardano-crypto-wrapper
     , cardano-ledger-api
+    , cardano-ledger-binary
     , cardano-ledger-byron
     , cardano-read-ledger
     , contra-tracer
+    , memory
     , network
     , network-mux
     , opt-env-conf
