@@ -1,5 +1,6 @@
 module Cardano.N2N.Client.Application.Options
     ( Options (..)
+    , Limit (..)
     , networkMagicOption
     , nodeNameOption
     , portNumberOption
@@ -8,8 +9,8 @@ module Cardano.N2N.Client.Application.Options
     )
 where
 
-import Cardano.N2N.Client.Application.ChainSync (Limit (..))
 import Cardano.N2N.Client.Ouroboros.Types (Point)
+import Data.Word (Word32)
 import Network.Socket (PortNumber)
 import OptEnvConf
     ( Parser
@@ -27,6 +28,10 @@ import OptEnvConf
 import Ouroboros.Network.Block qualified as Network
 import Ouroboros.Network.Magic (NetworkMagic (..))
 import Ouroboros.Network.Point (WithOrigin (..))
+
+-- | A limit on the number of blocks to sync
+newtype Limit = Limit {limit :: Word32}
+    deriving newtype (Show, Read, Eq, Ord, Enum)
 
 data Options = Options
     { networkMagic :: NetworkMagic
