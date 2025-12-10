@@ -45,8 +45,11 @@ jobs:
       - uses: paolino/dev-assets/setup-nix@v0.0.1
         with:
           cachix-auth-token: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-      - name: Run Tests
+      - name: Run cardano-read-ledger unit tests
+        run: nix run .#cardano-read-ledger-tests
+      - name: Run cardano-n2n-client unit tests
         run: nix run .#cardano-n2n-client-tests
+
   # bench:
   #   name: Run Benchmarks
   #   runs-on: ubuntu-latest

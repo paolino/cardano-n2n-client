@@ -4,7 +4,8 @@ index-state:
   , hackage.haskell.org 2025-08-07T00:00:00Z
   , cardano-haskell-packages 2025-08-07T00:00:00Z
 
-packages: .
+packages:
+    ., cardano-read-ledger
 
 repository cardano-haskell-packages
   url: https://chap.intersectmbo.org/

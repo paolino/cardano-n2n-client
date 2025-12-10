@@ -49,7 +49,9 @@ library
   build-depends:
     , base
     , bytestring
+    , cardano-ledger-api
     , cardano-ledger-byron
+    , cardano-read-ledger
     , contra-tracer
     , network
     , network-mux
@@ -60,7 +62,6 @@ library
     , ouroboros-network
     , ouroboros-network-api
     , ouroboros-network-framework
-    , ouroboros-network-mock
     , ouroboros-network-protocols
     , serialise
     , strict-stm
@@ -71,6 +72,7 @@ library
     Cardano.N2N.Client.Application.ChainSync
     Cardano.N2N.Client.Application.Options
     Cardano.N2N.Client.Application.Run
+    Cardano.N2N.Client.Application.TxIns
     Cardano.N2N.Client.Ouroboros.Application
     Cardano.N2N.Client.Ouroboros.Codecs
     Cardano.N2N.Client.Ouroboros.Connection

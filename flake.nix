@@ -53,7 +53,9 @@
 
           in rec {
             packages = {
-              inherit (project.packages) cardano-n2n-client;
+              inherit (project.packages)
+                cardano-n2n-client cardano-n2n-client-tests
+                cardano-read-ledger-tests;
               inherit docker-image;
               default = packages.cardano-n2n-client;
             };
