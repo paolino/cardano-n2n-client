@@ -1,4 +1,4 @@
-{ CHaP, indexState, pkgs, mkdocs, asciinema, ... }:
+{ CHaP, indexState, pkgs, mkdocs, asciinema, cardano-node, ... }:
 
 let
   indexTool = { index-state = indexState; };
@@ -28,7 +28,8 @@ let
       asciinema.compress
       asciinema.resize
       pkgs.asciinema
-
+      cardano-node.cardano-node
+      cardano-node.cardano-cli
     ];
     shellHook = ''
       echo "Entering shell for cardano-n2n-client development"

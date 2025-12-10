@@ -18,22 +18,19 @@
       url = "github:intersectmbo/cardano-haskell-packages?ref=repo";
       flake = false;
     };
-    cardano-node-runtime = {
-      url = "github:IntersectMBO/cardano-node?ref=10.1.4";
-    };
+    cardano-node.url = "github:IntersectMBO/cardano-node";
     mkdocs.url = "github:paolino/dev-assets?dir=mkdocs";
     asciinema.url = "github:paolino/dev-assets?dir=asciinema";
   };
 
   outputs = inputs@{ self, nixpkgs, flake-parts, haskellNix, CHaP, iohkNix
-    , mkdocs, asciinema, cardano-node-runtime, ... }:
+    , mkdocs, asciinema, cardano-node, ... }:
     let
       version = self.dirtyShortRev or self.shortRev;
       parts = flake-parts.lib.mkFlake { inherit inputs; } {
         systems = [ "x86_64-linux" "aarch64-darwin" ];
         perSystem = { system, ... }:
           let
-            node = cardano-node-runtime.project.${system};
             pkgs = import nixpkgs {
               overlays = [
                 iohkNix.overlays.crypto # modified crypto libs
@@ -45,6 +42,7 @@
             };
             project = pkgs.callPackage ./nix/project.nix {
               inherit CHaP;
+              cardano-node = cardano-node.packages.${system};
               indexState = "2025-08-07T00:00:00Z";
               mkdocs = mkdocs.packages.${system};
               asciinema = asciinema.packages.${system};
@@ -55,7 +53,6 @@
 
           in rec {
             packages = {
-              inherit (node.pkgs) cardano-node cardano-cli;
               inherit (project.packages) cardano-n2n-client;
               inherit docker-image;
               default = packages.cardano-n2n-client;
