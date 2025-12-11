@@ -14,7 +14,7 @@ import Cardano.N2N.Client.Application.Options
     , Options (..)
     , optionsParser
     )
-import Cardano.N2N.Client.Application.TxIns (txIns)
+import Cardano.N2N.Client.Application.UTxOs (uTxOs)
 import Cardano.N2N.Client.Ouroboros.Connection (runNodeApplication)
 import Cardano.N2N.Client.Ouroboros.Types
     ( Block
@@ -30,12 +30,15 @@ import Control.Concurrent.Class.MonadSTM.Strict
     )
 import Control.Exception (throwIO)
 import Control.Monad (when)
-import Data.ByteArray.Encoding (Base (..), convertToBase)
-import Data.ByteString.Char8 qualified as B
-import Data.ByteString.Lazy.Char8 qualified as BL
 import OptEnvConf (runParser)
 import Paths_cardano_n2n_client (version)
-import System.IO (BufferMode (..), hSetBuffering, stdout)
+import System.IO
+    ( BufferMode (..)
+    , hPutStr
+    , hSetBuffering
+    , stderr
+    , stdout
+    )
 
 main :: IO ()
 main = do
@@ -62,16 +65,18 @@ application
         doneVar <- newTVarIO False
 
         -- A TVar to count the number of synced blocks
-        countVar <- newTVarIO $ Limit 0
+        countVar <- newTVarIO 0
         let useBlock block = do
                 count <- atomically $ do
                     modifyTVar countVar succ
                     count <- readTVar countVar
-                    when (count >= limit)
+                    when (Limit count >= limit)
                         $ writeTVar doneVar True
                     pure count
-                putStr $ "block height: " <> show count <> "\r"
-                printTxIns block
+                when (count `mod` 1000 == 0)
+                    $ hPutStr stderr
+                    $ "block height: " <> show count <> "\r"
+                printUTxOs block
         r <-
             runNodeApplication
                 networkMagic
@@ -81,9 +86,7 @@ application
                 (mkBlockFetchApplication events doneVar useBlock)
         case r of
             Left err -> throwIO err
-            Right _ -> readTVarIO countVar
+            Right _ -> Limit <$> readTVarIO countVar
 
-printTxIns :: Block -> IO ()
-printTxIns blk = do
-    let ins = txIns blk
-    mapM_ (B.putStrLn . convertToBase Base64 . BL.toStrict) ins
+printUTxOs :: Block -> IO ()
+printUTxOs blk = mapM_ print $ uTxOs blk

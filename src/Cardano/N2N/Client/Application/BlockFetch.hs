@@ -29,6 +29,7 @@ import Ouroboros.Network.Protocol.BlockFetch.Client
     , BlockFetchRequest (..)
     , BlockFetchResponse (..)
     )
+import System.IO (hPrint, stderr)
 
 nextChainRange
     :: MonadSTM m => StrictTBQueue m Event -> STM m (ChainRange Point)
@@ -59,6 +60,7 @@ mkBlockFetchApplication events doneVar cb = BlockFetchClient
             then pure $ SendMsgClientDone ()
             else do
                 points <- atomically $ nextChainRange events
+                hPrint stderr points
                 pure
                     $ SendMsgRequestRange
                         points
