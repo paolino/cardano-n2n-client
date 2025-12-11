@@ -6,6 +6,7 @@ module Cardano.N2N.Client.Ouroboros.Types
     , Point
     , BlockFetchApplication
     , ChainSyncApplication
+    , KeepAliveApplication
     , ChainSync
     , BlockFetch
     ) where
@@ -19,6 +20,7 @@ import Ouroboros.Network.Protocol.BlockFetch.Client (BlockFetchClient)
 import Ouroboros.Network.Protocol.BlockFetch.Type qualified as BlockFetch
 import Ouroboros.Network.Protocol.ChainSync.Client (ChainSyncClient)
 import Ouroboros.Network.Protocol.ChainSync.Type qualified as ChainSync
+import Ouroboros.Network.Protocol.KeepAlive.Client (KeepAliveClient)
 
 -- | Real Cardano Block type
 type Block = Consensus.CardanoBlock Consensus.StandardCrypto
@@ -40,6 +42,9 @@ type BlockFetchApplication = BlockFetchClient Block Point IO ()
 
 -- | Type alias for ChainSync application
 type ChainSyncApplication = ChainSyncClient Header Point Tip IO ()
+
+-- | Type alias for KeepAlive protocol
+type KeepAliveApplication = KeepAliveClient IO ()
 
 -- | Type alias for ChainSync protocol
 type ChainSync = ChainSync.ChainSync Header Point Tip

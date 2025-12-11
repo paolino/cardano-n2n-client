@@ -73,9 +73,11 @@ library
   exposed-modules:
     Cardano.N2N.Client.Application.BlockFetch
     Cardano.N2N.Client.Application.ChainSync
+    Cardano.N2N.Client.Application.KeepAlive
     Cardano.N2N.Client.Application.Options
     Cardano.N2N.Client.Application.Run
     Cardano.N2N.Client.Application.TxIns
+    Cardano.N2N.Client.Application.KeepAlive
     Cardano.N2N.Client.Ouroboros.Application
     Cardano.N2N.Client.Ouroboros.Codecs
     Cardano.N2N.Client.Ouroboros.Connection

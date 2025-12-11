@@ -1,6 +1,7 @@
 module Cardano.N2N.Client.Ouroboros.Codecs
     ( codecChainSync
     , codecBlockFetch
+    , codecKeepAlive
     ) where
 
 import Cardano.Chain.Slotting (EpochSlots (EpochSlots))
@@ -49,6 +50,8 @@ import Ouroboros.Network.Block
 import Ouroboros.Network.Block qualified as Network
 import Ouroboros.Network.Protocol.BlockFetch.Codec qualified as BlockFetch
 import Ouroboros.Network.Protocol.ChainSync.Codec qualified as ChainSync
+import Ouroboros.Network.Protocol.KeepAlive.Codec qualified as KeepAlive
+import Ouroboros.Network.Protocol.KeepAlive.Type (KeepAlive)
 
 -- The ChainSync codec for our Block, Point, and Tip types
 codecChainSync
@@ -117,3 +120,11 @@ encBlock = encodeNodeToNode @Block ccfg version
 
 decBlock :: Decoder s Block
 decBlock = decodeNodeToNode @Block ccfg version
+
+codecKeepAlive
+    :: Codec
+        KeepAlive
+        DeserialiseFailure
+        IO
+        LBS.ByteString
+codecKeepAlive = KeepAlive.codecKeepAlive_v2

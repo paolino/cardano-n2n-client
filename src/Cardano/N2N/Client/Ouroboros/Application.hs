@@ -9,8 +9,12 @@ import Cardano.N2N.Client.Application.BlockFetch
 import Cardano.N2N.Client.Ouroboros.Codecs
     ( codecBlockFetch
     , codecChainSync
+    , codecKeepAlive
     )
-import Cardano.N2N.Client.Ouroboros.Types (ChainSyncApplication)
+import Cardano.N2N.Client.Ouroboros.Types
+    ( ChainSyncApplication
+    , KeepAliveApplication
+    )
 import Control.Tracer (nullTracer)
 import Data.ByteString.Lazy (LazyByteString)
 import Data.Void (Void)
@@ -30,6 +34,9 @@ import Ouroboros.Network.Mux
     )
 import Ouroboros.Network.Protocol.BlockFetch.Client qualified as BlockFetch
 import Ouroboros.Network.Protocol.ChainSync.Client qualified as ChainSync
+import Ouroboros.Network.Protocol.KeepAlive.Client
+    ( keepAliveClientPeer
+    )
 
 -- TODO: provide sensible limits
 -- https://github.com/intersectmbo/ouroboros-network/issues/575
@@ -44,6 +51,8 @@ mkOuroborosApplication
     -- ^ chainSync
     -> BlockFetchApplication
     -- ^ blockFetch
+    -> KeepAliveApplication
+    -- ^ keepAlive
     -> OuroborosApplicationWithMinimalCtx
         Mx.InitiatorMode
         addr
@@ -51,7 +60,7 @@ mkOuroborosApplication
         IO
         ()
         Void
-mkOuroborosApplication chainSyncApp blockFetchApp =
+mkOuroborosApplication chainSyncApp blockFetchApp keepAliveApp =
     OuroborosApplication
         { getOuroborosApplication =
             [ MiniProtocol
@@ -65,6 +74,12 @@ mkOuroborosApplication chainSyncApp blockFetchApp =
                 , miniProtocolStart = StartOnDemand
                 , miniProtocolLimits = maximumMiniProtocolLimits
                 , miniProtocolRun = runFetchBlocks
+                }
+            , MiniProtocol
+                { miniProtocolNum = MiniProtocolNum 8
+                , miniProtocolStart = StartOnDemand
+                , miniProtocolLimits = maximumMiniProtocolLimits
+                , miniProtocolRun = runKeepAlive
                 }
             ]
         }
@@ -82,4 +97,11 @@ mkOuroborosApplication chainSyncApp blockFetchApp =
             ( nullTracer
             , codecBlockFetch
             , BlockFetch.blockFetchClientPeer blockFetchApp
+            )
+    runKeepAlive = InitiatorProtocolOnly
+        $ mkMiniProtocolCbFromPeer
+        $ \_ctx ->
+            ( nullTracer
+            , codecKeepAlive
+            , keepAliveClientPeer keepAliveApp
             )

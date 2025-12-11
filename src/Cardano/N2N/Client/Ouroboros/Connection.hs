@@ -8,6 +8,7 @@ where
 import Cardano.N2N.Client.Application.BlockFetch
     ( BlockFetchApplication
     )
+import Cardano.N2N.Client.Application.KeepAlive (keepAliveApplication)
 import Cardano.N2N.Client.Ouroboros.Application
     ( mkOuroborosApplication
     )
@@ -108,6 +109,7 @@ runNodeApplication
                     $ mkOuroborosApplication
                         chainSyncApplication
                         blockFetchApplication
+                        keepAliveApplication
                 )
             )
             Nothing
