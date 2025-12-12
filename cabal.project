@@ -5,7 +5,7 @@ index-state:
   , cardano-haskell-packages 2025-08-07T00:00:00Z
 
 packages:
-    ., cardano-read-ledger
+    .
 
 repository cardano-haskell-packages
   url: https://chap.intersectmbo.org/
@@ -17,3 +17,9 @@ repository cardano-haskell-packages
     bcec67e8e99cabfa7764d75ad9b158d72bfacf70ca1d0ec8bc6b4406d1bf8413
     c00aae8461a256275598500ea0e187588c35a5d5d7454fb57eac18d9edb86a56
     d4a35cd3121aa00d18544bb0ac01c3e1691d618f462c46129271bccf39f7e8ee
+
+source-repository-package
+  type: git
+  location: https://github.com/paolino/cardano-read-ledger
+  tag: a4d3fda1a98808c5db837cc38349e163c89f7837
+  --sha256: sha256-eopQps2ripRQOYbRDfFGfj7DFvXWrTur1jaQNK5TA1U=

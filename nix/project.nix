@@ -65,7 +65,5 @@ in {
     project.hsPkgs.cardano-n2n-client.components.exes.cardano-n2n-client;
   packages.cardano-n2n-client-tests =
     project.hsPkgs.cardano-n2n-client.components.tests.cardano-n2n-client-test;
-  packages.cardano-read-ledger-tests =
-    project.hsPkgs.cardano-read-ledger.components.tests.unit-tests;
   inherit project;
 }
