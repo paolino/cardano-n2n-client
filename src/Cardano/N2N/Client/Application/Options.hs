@@ -9,7 +9,13 @@ module Cardano.N2N.Client.Application.Options
     )
 where
 
-import Cardano.N2N.Client.Ouroboros.Types (Point)
+import Cardano.N2N.Client.Ouroboros.Types (HeaderHash, Point)
+import Data.ByteArray.Encoding
+    ( Base (..)
+    , convertFromBase
+    )
+import Data.ByteString.Char8 qualified as B
+import Data.ByteString.Short qualified as SBS
 import Data.Word (Word32)
 import Network.Socket (PortNumber)
 import OptEnvConf
@@ -17,6 +23,7 @@ import OptEnvConf
     , auto
     , help
     , long
+    , maybeReader
     , metavar
     , option
     , reader
@@ -25,9 +32,19 @@ import OptEnvConf
     , strOption
     , value
     )
+import Ouroboros.Consensus.Byron.Ledger (ByronBlock)
+import Ouroboros.Consensus.Cardano.Block
+    ( CardanoShelleyEras
+    , StandardCrypto
+    )
+import Ouroboros.Consensus.HardFork.Combinator (OneEraHash (..))
+import Ouroboros.Network.Block (SlotNo (..))
 import Ouroboros.Network.Block qualified as Network
 import Ouroboros.Network.Magic (NetworkMagic (..))
 import Ouroboros.Network.Point (WithOrigin (..))
+import Ouroboros.Network.Point qualified as Network
+import Ouroboros.Network.Point qualified as Network.Point
+import Text.Read (readMaybe)
 
 -- | A limit on the number of blocks to sync
 newtype Limit = Limit {limit :: Word32}
@@ -87,14 +104,37 @@ limitOption =
             , option
             ]
 
--- startingPointOption :: Parser Point
--- startingPointOption = Network.Point <$> setting
---     [ long "starting-point"
---     , help "Starting point to sync from (format: origin or slot number)"
---     , metavar "POINT"
---     , value Origin
---     , reader parsePoint
---     ]
+startingPointOption :: Parser Point
+startingPointOption =
+    Network.Point
+        <$> setting
+            [ long "starting-point"
+            , help "Starting point to sync from (format: origin or slot number)"
+            , metavar "POINT"
+            , value Origin
+            , reader $ maybeReader readChainPoint
+            , option
+            ]
+
+readChainPoint
+    :: String
+    -> Maybe
+        ( WithOrigin
+            ( Network.Point.Block
+                SlotNo
+                (OneEraHash (ByronBlock : CardanoShelleyEras StandardCrypto))
+            )
+        )
+readChainPoint "origin" = Just Origin
+readChainPoint string = case break (== '@') string of
+    (blockHashStr, _ : slotNoStr) -> do
+        (hash :: HeaderHash) <-
+            either (const Nothing) (Just . OneEraHash . SBS.toShort)
+                $ convertFromBase Base16
+                $ B.pack blockHashStr
+        slot <- SlotNo <$> readMaybe slotNoStr
+        return $ At $ Network.Block slot hash
+    _ -> Nothing
 
 optionsParser :: Parser Options
 optionsParser =
@@ -102,5 +142,5 @@ optionsParser =
         <$> networkMagicOption
         <*> nodeNameOption
         <*> portNumberOption
-        <*> pure (Network.Point Origin)
+        <*> startingPointOption
         <*> limitOption
