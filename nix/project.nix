@@ -23,6 +23,7 @@ let
       just
       nixfmt-classic
       pkgs.mkdocs
+      mkdocs.from-nixpkgs
       mkdocs.asciinema-plugin
       mkdocs.markdown-callouts
       asciinema.compress

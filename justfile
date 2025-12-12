@@ -2,10 +2,10 @@
 
 format:
    #!/usr/bin/env bash
-   fourmolu -i src app test cardano-read-ledger/src cardano-read-ledger/test
-   fourmolu -i src app test cardano-read-ledger/src cardano-read-ledger/test
-   fourmolu -i src app test cardano-read-ledger/src cardano-read-ledger/test
-   cabal-fmt -i cardano-n2n-client.cabal  cardano-read-ledger/cardano-read-ledger.cabal
+   fourmolu -i src app test
+   fourmolu -i src app test
+   fourmolu -i src app test
+   cabal-fmt -i cardano-n2n-client.cabal 
    # shellcheck disable=SC2035
    nixfmt *.nix
    nixfmt nix/*.nix

@@ -1,12 +1,21 @@
-site_name: Cardano N2N Client
+site_name: Cardano N2N client
 site_url: https://paolino.github.io/cardano-n2n-client/
+site_description: Documentation for the Cardano N2N client, a lightweight implementation of a Card
+repo_url: https://github.com/paolino/cardano-n2n-client
 
 theme:
-  name: readthedocs
+  name: material
+  palette:
+    scheme: slate
+  features:
+    - navigation.indexes
+    - toc.integrate
+    - content.code.copy
+    - navigation.path
 
 plugins:
-  - asciinema-player
   - search
+  - asciinema-player
 
 markdown_extensions:
   - callouts
