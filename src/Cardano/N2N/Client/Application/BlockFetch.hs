@@ -1,5 +1,6 @@
 module Cardano.N2N.Client.Application.BlockFetch
     ( mkBlockFetchApplication
+    , EventQueueLength (..)
     , BlockFetchApplication
     )
 where
@@ -17,6 +18,7 @@ import Control.Concurrent.Class.MonadSTM.Strict
     , flushTBQueue
     , readTVarIO
     )
+import Control.Tracer (Tracer, traceWith)
 import Data.Function (fix)
 import Data.Functor (($>))
 import Data.Maybe (mapMaybe)
@@ -29,15 +31,17 @@ import Ouroboros.Network.Protocol.BlockFetch.Client
     , BlockFetchRequest (..)
     , BlockFetchResponse (..)
     )
-import System.IO (hPrint, stderr)
 
+newtype EventQueueLength = EventQueueLength Int
+    deriving (Show)
 nextChainRange
-    :: MonadSTM m => StrictTBQueue m Event -> STM m (ChainRange Point)
+    :: MonadSTM m
+    => StrictTBQueue m Event -> STM m (ChainRange Point, EventQueueLength)
 nextChainRange events = do
     xs <- mapMaybe getPoint <$> flushTBQueue events
     case xs of
         [] -> retry
-        y : ys -> pure . ChainRange y $ case ys of
+        y : ys -> pure . (,EventQueueLength (length xs)) . ChainRange y $ case ys of
             [] -> y
             _ -> last ys
   where
@@ -45,22 +49,24 @@ nextChainRange events = do
     getPoint (RollBackward _point _) = Nothing
 
 mkBlockFetchApplication
-    :: StrictTBQueue IO Event
+    :: Tracer IO EventQueueLength
+    -- ^ metrics tracer
+    -> StrictTBQueue IO Event
     -- ^ queue of headers to request blocks for
     -> StrictTVar IO Bool
     -- ^ variable indicating whether we're done
     -> (Block -> IO ())
     -- ^ callback to process each fetched block
     -> BlockFetchApplication
-mkBlockFetchApplication events doneVar cb = BlockFetchClient
+mkBlockFetchApplication tr events doneVar cb = BlockFetchClient
     $ fix
     $ \fetch -> do
         done <- readTVarIO doneVar
         if done
             then pure $ SendMsgClientDone ()
             else do
-                points <- atomically $ nextChainRange events
-                hPrint stderr points
+                (points, len) <- atomically $ nextChainRange events
+                traceWith tr len
                 pure
                     $ SendMsgRequestRange
                         points

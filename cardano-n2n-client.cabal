@@ -47,9 +47,10 @@ library
   import:          settings
   hs-source-dirs:  src
   build-depends:
+    , ansi-terminal
+    , async
     , base
     , bytestring
-    , cardano-crypto-wrapper
     , cardano-ledger-api
     , cardano-ledger-binary
     , cardano-ledger-byron
@@ -74,6 +75,7 @@ library
     Cardano.N2N.Client.Application.BlockFetch
     Cardano.N2N.Client.Application.ChainSync
     Cardano.N2N.Client.Application.KeepAlive
+    Cardano.N2N.Client.Application.Metrics
     Cardano.N2N.Client.Application.Options
     Cardano.N2N.Client.Application.Run
     Cardano.N2N.Client.Application.UTxOs

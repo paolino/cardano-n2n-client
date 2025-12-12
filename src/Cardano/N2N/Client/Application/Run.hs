@@ -9,6 +9,10 @@ import Cardano.N2N.Client.Application.BlockFetch
 import Cardano.N2N.Client.Application.ChainSync
     ( mkChainSyncApplication
     )
+import Cardano.N2N.Client.Application.Metrics
+    ( MetricsEvent (..)
+    , metricsTracer
+    )
 import Cardano.N2N.Client.Application.Options
     ( Limit (..)
     , Options (..)
@@ -30,13 +34,12 @@ import Control.Concurrent.Class.MonadSTM.Strict
     )
 import Control.Exception (throwIO)
 import Control.Monad (when)
+import Control.Tracer (Contravariant (..), traceWith)
 import OptEnvConf (runParser)
 import Paths_cardano_n2n_client (version)
 import System.IO
     ( BufferMode (..)
-    , hPutStr
     , hSetBuffering
-    , stderr
     , stdout
     )
 
@@ -64,6 +67,8 @@ application
         events <- newTBQueueIO 100
         doneVar <- newTVarIO False
 
+        tracer <- metricsTracer 1000
+
         -- A TVar to count the number of synced blocks
         countVar <- newTVarIO 0
         let useBlock block = do
@@ -73,9 +78,7 @@ application
                     when (Limit count >= limit)
                         $ writeTVar doneVar True
                     pure count
-                when (count `mod` 1000 == 0)
-                    $ hPutStr stderr
-                    $ "block height: " <> show count <> "\r"
+                traceWith tracer (BlockHeightMetrics count)
                 printUTxOs block
         r <-
             runNodeApplication
@@ -83,10 +86,15 @@ application
                 nodeName
                 portNumber
                 (mkChainSyncApplication events doneVar startingPoint)
-                (mkBlockFetchApplication events doneVar useBlock)
+                ( mkBlockFetchApplication
+                    (contramap BlockFetchMetrics tracer)
+                    events
+                    doneVar
+                    useBlock
+                )
         case r of
             Left err -> throwIO err
             Right _ -> Limit <$> readTVarIO countVar
 
 printUTxOs :: Block -> IO ()
-printUTxOs blk = mapM_ print $ uTxOs blk
+printUTxOs blk = print $ uTxOs blk
