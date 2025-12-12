@@ -97,4 +97,4 @@ application
             Right _ -> Limit <$> readTVarIO countVar
 
 printUTxOs :: Block -> IO ()
-printUTxOs blk = print $ uTxOs blk
+printUTxOs blk = seq (seq <$> uTxOs blk) $ pure ()
