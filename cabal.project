@@ -1,8 +1,8 @@
-index-state: 2025-08-07T00:00:00Z
+index-state: 2025-12-10T00:00:00Z
 
 index-state:
-  , hackage.haskell.org 2025-08-07T00:00:00Z
-  , cardano-haskell-packages 2025-08-07T00:00:00Z
+  , hackage.haskell.org 2025-12-10T00:00:00Z
+  , cardano-haskell-packages 2025-12-10T00:00:00Z
 
 packages:
     .
@@ -21,5 +21,5 @@ repository cardano-haskell-packages
 source-repository-package
   type: git
   location: https://github.com/paolino/cardano-read-ledger
-  tag: a4d3fda1a98808c5db837cc38349e163c89f7837
-  --sha256: sha256-eopQps2ripRQOYbRDfFGfj7DFvXWrTur1jaQNK5TA1U=
+  tag: 2a9521e9282e4955f5454847c3f87eb7e7ac1730
+  --sha256: sha256-g4pY67U7PqJ8DIKmhYImMs7FW3NmQFKPl4PYqMQT+sE=

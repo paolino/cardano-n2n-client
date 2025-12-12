@@ -43,7 +43,7 @@
             project = pkgs.callPackage ./nix/project.nix {
               inherit CHaP;
               cardano-node = cardano-node.packages.${system};
-              indexState = "2025-08-07T00:00:00Z";
+              indexState = "2025-12-07T00:00:00Z";
               mkdocs = mkdocs.packages.${system};
               asciinema = asciinema.packages.${system};
             };

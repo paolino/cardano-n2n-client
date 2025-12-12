@@ -61,7 +61,7 @@ library
     , network-mux
     , opt-env-conf
     , ouroboros-consensus
-    , ouroboros-consensus-cardano   ^>=0.25
+    , ouroboros-consensus-cardano
     , ouroboros-consensus-protocol
     , ouroboros-network
     , ouroboros-network-api
